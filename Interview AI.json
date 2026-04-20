@@ -1,0 +1,391 @@
+{
+  "name": "Interview AI",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## 🤖 Step 3: تحليل المقابله التي تمت من خلال المسؤول\n\n**This section runs automatically to:**\n- بدء و انتهاء المقابله \n- تحليل ردود المتقدم للوظيفة\n- حفظ النتائج ففي جوجل شيت\n\n**قبل التفعيل:** \nتاكد من تفعيل الويب هوك في الموقع على رابط البرودكشن",
+        "height": 572,
+        "width": 520,
+        "color": 6
+      },
+      "id": "26d0c87b-e7ed-4f2f-a5ab-2a03451bc285",
+      "name": "Automated Analysis",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        112,
+        -416
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "beyondpresence",
+        "options": {}
+      },
+      "id": "71c368b7-8b58-43a4-a359-2f0a8c876977",
+      "name": "Receive Interview Data",
+      "type": "n8n-nodes-base.webhook",
+      "position": [
+        160,
+        -16
+      ],
+      "webhookId": "beyondpresence-hr-interviews",
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "gpt-4o-mini"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=حلّل مقابلة العمل هذه وقدّم تقييمًا للتوظيف.\n\nوصف الوظيفة:\n{{ $json['Job Description'] }}\n\nاسم المرشح: {{ $('Handle webhook event').item.json.user.name }}\nمدة المقابلة: {{ $('Handle webhook event').item.json.call_details.duration_minutes }} minutes\n\nنص المقابلة:\n{{ $('Handle webhook event').item.json.messages.map(m => `[${m.timestamp}] ${m.sender.toUpperCase()}: ${m.message}`).join('\\n') }}\n\nقدّم تقييمًا شاملاً يشمل:\nدرجة التوافق العامة (من 0 إلى 100)\n\nنقاط القوة الرئيسية\n\nأي ملاحظات أو فجوات محتملة\n\nتوصية التوظيف\n\nالخطوات التالية المقترحة\n\nFormat your response as JSON:\n```json\n{\n  \"fitScore\": 85,\n  \"recommendation\": \"recommend\",\n  \"strengths\": [\"strength 1\", \"strength 2\", \"strength 3\"],\n  \"concerns\": [\"concern 1\", \"concern 2\"],\n  \"summary\": \"Brief 2-3 sentence overall assessment\",\n  \"nextSteps\": [\"suggested action 1\", \"suggested action 2\"]\n}\n```",
+              "role": "system"
+            }
+          ]
+        },
+        "options": {
+          "temperature": 0.3
+        }
+      },
+      "id": "aa6261b4-3845-4e83-a873-eb6412805413",
+      "name": "Analyze Interview",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "position": [
+        848,
+        -16
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "openAiApi": {
+          "id": "uRsZZxDgWvA9KurP",
+          "name": "OpenAi Main"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse AI analysis\nconst analysisText = $input.first().json.message.content;\nconst analysis = JSON.parse(analysisText.match(/```json\\n([\\s\\S]*?)\\n```/)[1]);\nconst startedAt = new Date($('Receive Interview Data').first().json.body.call_data.startedAt);\nconst endedAt = new Date($('Receive Interview Data').first().json.body.call_data.endedAt);\nconst diffMs = endedAt - startedAt; // difference in milliseconds\n\nconst totalSeconds = Math.floor(diffMs / 1000);\nconst minutes = Math.floor(totalSeconds / 60);\nconst seconds = totalSeconds % 60;\n\nconst diffString = `${minutes}:${seconds}`;\n// Format for Google Sheets\nreturn [{\n  json: {\n    \"Candidate Name\": $('Handle webhook event').first().json.user.name,\n    \"Interview Date\":  $now.toFormat('dd.MM.yyyy'),\n    \"Duration (minutes)\":diffString,\n    \"Fit Score\": analysis.fitScore,\n    \"Recommendation\": analysis.recommendation,\n    \"Strengths\": analysis.strengths.join(\"; \"),\n    \"Concerns\": analysis.concerns.join(\"; \") || \"None\",\n    \"Summary\": analysis.summary,\n    \"Next Steps\": analysis.nextSteps.join(\"; \"),\n    \"Call ID\": $('Handle webhook event').first().json.call_id,\n    \"Analyzed On\": $now,\n  }\n}];"
+      },
+      "id": "651e09fe-70c7-4fea-9812-3d95c589f9cb",
+      "name": "Format for Sheets",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        1392,
+        -16
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "1dXLpP5bRRirBsln4YIQtFgb1MiP-0yR8IDRzse5k7X0",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1dXLpP5bRRirBsln4YIQtFgb1MiP-0yR8IDRzse5k7X0/edit?usp=drivesdk",
+          "cachedResultName": "BeyondPresence HR Interview System Template"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gid=0",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1dXLpP5bRRirBsln4YIQtFgb1MiP-0yR8IDRzse5k7X0/edit#gid=0",
+          "cachedResultName": "Interview Results"
+        },
+        "columns": {
+          "value": {
+            "Fit Score": "={{ $json['Fit Score'] }}",
+            "Candidate Name": "={{ $json['Candidate Name'] }}",
+            "Interview Date": "={{ $json['Interview Date'] }}",
+            "Duration (minutes)": "={{ $json['Duration (minutes)'] }}"
+          },
+          "schema": [
+            {
+              "id": "Candidate Name",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Candidate Name",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Interview Date",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Interview Date",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Duration (minutes)",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Duration (minutes)",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Fit Score",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Fit Score",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Recommendation",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Recommendation",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Strengths",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Strengths",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Concerns",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Concerns",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Summary",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Summary",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Next Steps",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Next Steps",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Call ID",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Call ID",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Analyzed On",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Analyzed On",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            }
+          ],
+          "mappingMode": "autoMapInputData",
+          "matchingColumns": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "a268db41-2f75-41f7-be0d-bfe84c44609c",
+      "name": "Save to Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [
+        1600,
+        -16
+      ],
+      "typeVersion": 4.6,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "uoxvA3Gl5JfQeEeE",
+          "name": "Google Sheets account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## 📊 نتائج المقابله تخزين في جوجل شيت \n\n**Quick Start**:\n1. Use the same document but select **'Interview Results'**  sheet this time, the template includes all required columns!\n\n**Connect your Google Sheets here →**",
+        "height": 572,
+        "width": 480,
+        "color": 6
+      },
+      "id": "1302b1bb-fa86-4bba-9a86-b4c26fea98ed",
+      "name": "Sheet Headers",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1344,
+        -416
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## 🔍 تحليل المقابله و التقييم\n\n1. استخراج نتائج الردود مع المتقدم للوظيفه: \n2. وكيل الذكاء الاصطناعي سيقوم بتحليل و تقييم الردود: \n\n\nسيكون التحليل و التقييم يشمل :\n- معدل المقابله من 1-10\n- نقاط القوه و الضعف\n- تقييم المهارات و الضعف\n- اعطاء افاده هل ينصح في تعيينه ام لا \n- اقتراح من الذكاء الاصطناعي بالخطوه اللتالية\n\nهذا الجزء يعطي قسم الموارد البشريه تقييم مبداي من خلال الذكاء الاصطناعي عن الموظف ومهاراته و غيره من المعلومات ",
+        "height": 572,
+        "width": 684,
+        "color": 4
+      },
+      "id": "c8402ba6-0db1-4a07-957c-4180231f5de7",
+      "name": "Processing Steps",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        640,
+        -416
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "resource": "webhook",
+        "eventType": "call_ended",
+        "filterByAgentIds": true,
+        "agentIds": "={{ $items(\"Get agent info\")[$items(\"Get agent info\").length - 1].json['Agent ID'] }}",
+        "webhookData": "={{ $('Receive Interview Data').item.json.body.toJsonString() }}"
+      },
+      "id": "28f311c3-f00c-4bfb-baf8-5003a72ad1a5",
+      "name": "Handle webhook event",
+      "type": "n8n-nodes-beyondpresence.beyondPresence",
+      "position": [
+        496,
+        -16
+      ],
+      "executeOnce": true,
+      "typeVersion": 1,
+      "credentials": {
+        "beyondPresenceApi": {
+          "id": "PFnEvb8hxkBaBKe0",
+          "name": "Beyond Presence account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "1dXLpP5bRRirBsln4YIQtFgb1MiP-0yR8IDRzse5k7X0",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1dXLpP5bRRirBsln4YIQtFgb1MiP-0yR8IDRzse5k7X0/edit?usp=drivesdk",
+          "cachedResultName": "BeyondPresence HR Interview System Template"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": 1902016160,
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1dXLpP5bRRirBsln4YIQtFgb1MiP-0yR8IDRzse5k7X0/edit#gid=1902016160",
+          "cachedResultName": "Interview Agents"
+        },
+        "options": {
+          "returnFirstMatch": true
+        }
+      },
+      "id": "3b6889cc-75f4-4f3e-b25c-53966701ae3a",
+      "name": "Get agent info",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [
+        336,
+        -16
+      ],
+      "typeVersion": 4.7,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "uoxvA3Gl5JfQeEeE",
+          "name": "Google Sheets account 2"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Receive Interview Data": {
+      "main": [
+        [
+          {
+            "node": "Get agent info",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze Interview": {
+      "main": [
+        [
+          {
+            "node": "Format for Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format for Sheets": {
+      "main": [
+        [
+          {
+            "node": "Save to Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Handle webhook event": {
+      "main": [
+        [
+          {
+            "node": "Analyze Interview",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get agent info": {
+      "main": [
+        [
+          {
+            "node": "Handle webhook event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "bf10b025-f3d0-4126-a35e-c70301889000",
+  "meta": {
+    "instanceId": "4512788ad986d4a9b6ca7e10ee56d1787e59ee80c41eb7f6570173771e2cfce0"
+  },
+  "id": "0BX6PxaKhvh54g4_VxL3X",
+  "tags": []
+}
