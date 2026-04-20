@@ -1,0 +1,343 @@
+{
+  "name": "SetupInterviews",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## 📝 Step 1: اضافة معلومات الوظيقة المطلوبه\n\n**نسخ الوصف الوظيفي داخل الكود**\n\nيحتوي على :\n- اسم الوظيفة\n- اسم الشركه التي سيتقدم لها الموظف\n- مسرولياته\n- المتطلبات\n- اي معلومات اخرى ترغب بمعرفتها\n\nمسؤول التوظيف الذكي سيكون مدرك لكل هذى المعلومات من الشركه الام",
+        "height": 520,
+        "width": 432,
+        "color": 5
+      },
+      "id": "714cfa69-cf34-40c2-840d-8432caca43ab",
+      "name": "Job Description Instructions",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -512,
+        240
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "jsCode": "// ========== PASTE YOUR JOB DESCRIPTION HERE ==========\n// Simply paste your entire job posting between the quotes below\n// Include everything: job title, company name, requirements, etc.\n\nconst jobDescription = `\nBeyondPresence.ai شركة تقنية تعمل على تطوير حلول ذكاء اصطناعي ووكلاء محادثة رقمية تقدم تفاعلاً شبيهاً بالبشر. نبحث عن مبرمج للمساهمة في تطوير المنصة وتحسين مكوناتها البرمجية.\n\nالمهام\nتطوير وصيانة النظام البرمجي.\nربط الأنظمة عبر واجهات API.\nتحسين الأداء ومعالجة الأخطاء.\nالتعاون مع فريق العمل لتنفيذ المتطلبات.\n\nالمتطلبات\nخبرة من سنة إلى ثلاث سنوات في البرمجة.\nمعرفة بإحدى لغات البرمجة الحديثة مثل JavaScript أو Python.\nفهم أساسيات REST APIs وقواعد البيانات.\nالقدرة على التعلم والعمل ضمن فريق.\n`;\n\n// Don't change anything below this line\nreturn [{\n  json: {\n    jobDescription: jobDescription.trim(),\n    timestamp: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "67a1a20d-5454-4539-9b20-0ccb57846ee1",
+      "name": "📝 Your Job Description",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        -240,
+        608
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "content": "## 🚀 Step 2: انشاء رابط لمسؤول التةظيف بالمقابله\n\n**اذغط على النود بالاسفل لعمل التالي:**\n1. انشاء مسؤول التوظيف الذكي\n2. انشاء رابط المقابله\n\nتنفيذ هذا المخطط مره واحده فقط",
+        "height": 520,
+        "width": 430,
+        "color": 7
+      },
+      "id": "8ae304f5-cf57-496d-afb9-4c38a0b307ee",
+      "name": "Setup Instructions",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -64,
+        240
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {},
+      "id": "710f736c-b361-4814-ac65-996a68885610",
+      "name": "▶️ Click to Start Setup",
+      "type": "n8n-nodes-base.manualTrigger",
+      "position": [
+        -448,
+        608
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "avatarId": "={{ $json.avatarId }}",
+        "systemPrompt": "={{ $json.systemPrompt }}",
+        "name": "={{ $json.agentName }}",
+        "language": "ar",
+        "greeting": "={{ $json.welcomeMessage }}",
+        "maxSessionLengthMinutes": 5
+      },
+      "id": "d3a2735a-3420-4626-a04e-496312a5af9f",
+      "name": "Create Interview Agent",
+      "type": "n8n-nodes-beyondpresence.beyondPresence",
+      "position": [
+        208,
+        608
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "beyondPresenceApi": {
+          "id": "PFnEvb8hxkBaBKe0",
+          "name": "Beyond Presence account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const workflowStaticData = $getWorkflowStaticData('global');\n\n\n\nconst agentId = $input.first().json.id;\nconst interviewLink = $input.first().json.call_link;\nconst jobDescription = $('Prepare Interview Agent').first().json.jobDescription;\n\nworkflowStaticData.agentId = agentId;\nworkflowStaticData.jobDescription = jobDescription;\nworkflowStaticData.interviewLink = interviewLink;\n\n\n\nreturn [{\n  json: {\n    \"Agent ID\": workflowStaticData.agentId,\n    \"Agent Name\":$('Prepare Interview Agent').first().json.agentName,\n    \"Interview Link\": interviewLink,\n    \"Job Description\": workflowStaticData.jobDescription,\n    \"System Prompt\": $('Prepare Interview Agent').first().json.systemPrompt,\n    \"Welcome Message\": $('Prepare Interview Agent').first().json.welcomeMessage\n    \n  }\n}];"
+      },
+      "id": "fb61b25e-4cc7-4bf6-a2b0-a5758917f3f2",
+      "name": "Save Agent Info",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        464,
+        608
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "content": "## ✅ اتمام الاعدادات\n\n**تم انشاء رابط المقابله:**\n`https://bey.chat/[agent-id]`\n\n** هنا سيتم اعداد الوكيل و استخدامه من خلال الويب هوك عند بدء المقابله.",
+        "height": 520,
+        "width": 267,
+        "color": 2
+      },
+      "id": "c85b6fd7-4e7f-4453-990a-d2e6f96e502e",
+      "name": "Success!",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        384,
+        240
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## 📊 اعدادات جوجل شيت لتحضير الملفات الخاصه بالمقابله و النتائح\n\n1.انسخ الورقه عندك في حسابك من الرابط  https://docs.google.com/spreadsheets/d/1dXLpP5bRRirBsln4YIQtFgb1MiP-0yR8IDRzse5k7X0/copy\n2. اربط حسابك في جوجل شيت.\n",
+        "height": 520,
+        "width": 588,
+        "color": 6
+      },
+      "id": "1f73021a-aaf3-4911-8492-33638afbbd68",
+      "name": "Sheet Headers1",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        672,
+        240
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1aMEBzfjS-Oyz9oue5x70yCSjkazakSCXMPsIaunc_KY",
+          "mode": "list",
+          "cachedResultName": "BeyondPresence HR Interview System Template",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1aMEBzfjS-Oyz9oue5x70yCSjkazakSCXMPsIaunc_KY/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1902016160,
+          "mode": "list",
+          "cachedResultName": "Interview Agents",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1aMEBzfjS-Oyz9oue5x70yCSjkazakSCXMPsIaunc_KY/edit#gid=1902016160"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Agent ID",
+              "displayName": "Agent ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Agent Name",
+              "displayName": "Agent Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Interview Link",
+              "displayName": "Interview Link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Job Description",
+              "displayName": "Job Description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "System Prompt",
+              "displayName": "System Prompt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Welcome Message",
+              "displayName": "Welcome Message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "87240ef8-450e-47df-87a0-b3e43d283926",
+      "name": "Save to Google Sheets1",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [
+        800,
+        608
+      ],
+      "typeVersion": 4.6,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "P9fCSs1ekjlEdopW",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7865fb06-18cf-4a2e-93a7-45e86c7ccada",
+              "name": "avatarId",
+              "type": "string",
+              "value": "694c83e2-8895-4a98-bd16-56332ca3f449"
+            },
+            {
+              "id": "b1dce28c-eea1-42bb-9d51-39462d7cea1a",
+              "name": "agentName",
+              "type": "string",
+              "value": "=ساره"
+            },
+            {
+              "id": "46f927ce-40b6-4121-b956-e8ee9b0481b1",
+              "name": "welcomeMessage",
+              "type": "string",
+              "value": "مرحبًا! أهلًا وسهلًا بك في مقابلتنا. يسعدني التعرّف على خلفيتك ومناقشة هذه الفرصة معك.\nلنبدأ بأن تخبرني قليلًا عن نفسك، وما الذي يجذبك إلى هذه الوظيفة."
+            },
+            {
+              "id": "b5fcf2ac-705d-49c9-84c9-287b20e8b4cb",
+              "name": "systemPrompt",
+              "type": "string",
+              "value": "=أنت مسؤول توظيف في الموارد بشرية محترف تُجري مقابلات عمل. هدفك تقييم المرشحين بشكل شامل مع جعلهم يشعرون بالراحة والتقدير.\n\nوصف الوظيفة: {{ $json.jobDescription }}\n\nأسلوب المقابلة:\n\nابدأ بترحيب لطيف وتعريف مختصر بنفسك\n\nاسأل عن اهتمام المرشح بالوظيفة وبالشركة\n\nناقش خبراته ذات الصلة مع طلب أمثلة عملية\n\nقيّم المهارات التقنية ومدى التوافق الثقافي\n\nاختتم المقابلة بطريقة مهنية مع توضيح الخطوات القادمة\n\nكن حواريًا، اطرح أسئلة متابعة، وأظهر اهتمامًا حقيقيًا بإجابات المرشح.\nإذا بدا المرشح متوترًا، ساعده على الشعور بالراحة.\nاحرص دائمًا على الحفاظ على نبرة مهنية وودية في نفس الوقت.\n"
+            },
+            {
+              "id": "715849ae-8722-40c3-a093-bcc54699e483",
+              "name": "jobDescription",
+              "type": "string",
+              "value": "={{$input.first().json.jobDescription}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "333427ed-b82f-452c-bfcf-ebbffca584db",
+      "name": "Prepare Interview Agent",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        16,
+        608
+      ],
+      "typeVersion": 3.4
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "📝 Your Job Description": {
+      "main": [
+        [
+          {
+            "node": "Prepare Interview Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "▶️ Click to Start Setup": {
+      "main": [
+        [
+          {
+            "node": "📝 Your Job Description",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Interview Agent": {
+      "main": [
+        [
+          {
+            "node": "Save Agent Info",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Agent Info": {
+      "main": [
+        [
+          {
+            "node": "Save to Google Sheets1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Interview Agent": {
+      "main": [
+        [
+          {
+            "node": "Create Interview Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "def93d78-5817-4986-aa63-8a258a04dd15",
+  "meta": {
+    "instanceId": "4512788ad986d4a9b6ca7e10ee56d1787e59ee80c41eb7f6570173771e2cfce0"
+  },
+  "id": "XOZ4AkL9_e3kvhHsqleuQ",
+  "tags": []
+}
